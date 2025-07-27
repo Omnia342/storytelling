@@ -34,7 +34,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = Together(api_key="9076e16842f3345f0295d4672d1a657bbcaf76d462a53b042c67e3c68925e475")
+client = Together()
 LLM_MODEL = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
 
 @app.post("/chat", response_model=ChatResponse)

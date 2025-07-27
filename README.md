@@ -1,7 +1,6 @@
-echo "# chatbot3" >> README.md
-git init
-git add README.md
-git commit -m "first commit"
-git branch -M main
-git remote add origin https://github.com/Omnia342/chatbot3.git
-git push -u origin main
+
+A simple chatbot using FastAPI backend and Streamlit frontend.
+-  LLM model: Together AI
+-  Memory: session-based
+-  API: /chat endpoint
+-  UI: Streamlit chat interface

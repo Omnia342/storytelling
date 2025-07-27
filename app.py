@@ -54,4 +54,4 @@ if prompt := st.chat_input("What's on your mind?"):
                 full_response = error_message
 
     
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+    st.session_state.messages.append({"role": "assistant", "content": full_response} )

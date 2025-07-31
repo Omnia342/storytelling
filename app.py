@@ -14,8 +14,9 @@ if "inventory" not in st.session_state:
     st.session_state.inventory = []
 
 # Select role and genre
-role = st.selectbox("Choose your role:", ["Hero", "Villain", "Detective", "Survivor", "Ghost"])
-genre = st.selectbox("Choose story genre:", ["Fantasy", "Sci-Fi", "Mystery", "Post-apocalyptic", "Horror"])
+role = st.text_input("Enter your role (e.g., Hero, Villain, Time Traveler, etc.):")
+bot_role = st.text_input("Enter the bot's role (e.g., Knight, Storyteller, Sidekick, etc.):")
+genre = st.selectbox("Choose story genre:", ["Fantasy", "Romantasy", "Sci-Fi", "Mystery", "Post-apocalyptic", "Horror", "Romance", "Romantic Comedy"])
 user_input = st.text_input("What do you do next?")
 
 # Continue the story

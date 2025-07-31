@@ -12,8 +12,9 @@ TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
 
 def continue_story(role, genre, history, user_input):
     messages = history + [
-        {"role": "user", "content": f"My role: {role}, Genre: {genre}. My action: {user_input}"}
+    {"role": "user", "content": f"Write the next part of the story. My character is the {role}. The genre is {genre}. Continue naturally from here: {user_input}. Do not split into chapters or include choices. Just write a flowing story in paragraphs."}
     ]
+
     response = requests.post(
         "https://api.together.xyz/v1/chat/completions",
         headers={
@@ -23,7 +24,7 @@ def continue_story(role, genre, history, user_input):
         json={
             "model": "mistralai/Mixtral-8x7B-Instruct-v0.1",
             "messages": messages,
-            "max_tokens": 300,
+            "max_tokens": 1000,
             "temperature": 0.8
         }
     )

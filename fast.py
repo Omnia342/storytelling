@@ -1,61 +1,30 @@
-from fastapi import FastAPI
-
-app=FastAPI()
-
-@app.get("/")
-def read_root():
-    return{"message":"helo world"}
-
-@app.get("/hello/{name}")
-def say_hello(name:str):
-    return{"message":f"hello {name}"}
-
-from pydantic import BaseModel
-
-class query(BaseModel):
-    userid: str
-    message: str
-
-@app.post("/chat/")
-def chat(query: query):
-    return {"message": f"User {query.userid} says: {query.message}"}
-
-
-
-
-class ChatRequest(BaseModel):
-    prompt: str
-
-class ChatResponse(BaseModel):
-    answer: str
-
-from together import Together
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
+from story_logic import continue_story, update_inventory
+
 load_dotenv()
+app = FastAPI()
 
-client = Together()
-LLM_MODEL = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.post("/chat", response_model=ChatResponse)
-async def chat_with_llama(request: ChatRequest):
-    """
-    Receives a prompt from the user, sends it to the Llama 3 model,
-    and returns the model's response.
-    """
-    
-    
-    response = client.chat.completions.create(
-        model=LLM_MODEL,
-        messages=[
-            {
-                "role": "user",
-                "content": request.prompt,
-            }
-        ]
-    )
-    
+@app.post("/story")
+async def story_api(request: Request):
+    data = await request.json()
+    role = data.get("role")
+    genre = data.get("genre")
+    history = data.get("history", [])
+    user_input = data.get("user_input")
+    inventory = data.get("inventory", [])
 
-    model_answer = response.choices[0].message.content
+    reply = continue_story(role, genre, history, user_input)
+    inventory = update_inventory(reply, inventory)
 
-    return ChatResponse(answer=model_answer)
+    return {"response": reply, "inventory": inventory}

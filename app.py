@@ -1,57 +1,62 @@
 import streamlit as st
 import requests
-import uuid
+from story_logic import export_story_to_pdf
 
-API_URL = "http://127.0.0.1:8000/chat"  
+st.set_page_config(page_title="📖 Storytelling Chatbot", layout="centered")
+st.title("🎭 Interactive Storytelling Bot")
 
-st.title("Chatbot 🤖")
+# Session state initialization
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = [
+        {"role": "system", "content": "You are a creative storyteller. Write engaging interactive stories."}
+    ]
+if "inventory" not in st.session_state:
+    st.session_state.inventory = []
 
-if "user_id" not in st.session_state:
-    st.session_state.user_id = str(uuid.uuid4())
+# Select role and genre
+role = st.selectbox("Choose your role:", ["Hero", "Villain", "Detective", "Survivor", "Ghost"])
+genre = st.selectbox("Choose story genre:", ["Fantasy", "Sci-Fi", "Mystery", "Post-apocalyptic", "Horror"])
+user_input = st.text_input("What do you do next?")
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# Continue the story
+if st.button("Continue Story"):
+    if user_input:
+        res = requests.post(
+            "http://localhost:8000/story",
+            json={
+                "role": role,
+                "genre": genre,
+                "history": st.session_state.chat_history,
+                "user_input": user_input,
+                "inventory": st.session_state.inventory
+            }
+        )
+        if res.status_code == 200:
+            data = res.json()
+            reply = data["response"]
+            st.session_state.inventory = data.get("inventory", [])
 
+            st.session_state.chat_history.append({"role": "user", "content": user_input})
+            st.session_state.chat_history.append({"role": "assistant", "content": reply})
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+            st.markdown("### 📜 Story so far:")
+            for msg in st.session_state.chat_history[1:]:
+                icon = "👤" if msg["role"] == "user" else "🧙‍♂️"
+                st.markdown(f"{icon} {msg['content']}")
+        else:
+            st.error("Backend error!")
+    else:
+        st.warning("Please write something to continue the story.")
 
+# Inventory Display
+if st.session_state.inventory:
+    st.markdown("### 🧰 Inventory Collected:")
+    for item in st.session_state.inventory:
+        st.markdown(f"🔹 {item}")
 
-if prompt := st.chat_input("What's on your mind?"):
-    
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        with st.spinner("Thinking..."):
-            full_response = ""
-            try:
-                
-                payload = {"prompt": prompt}
-                
-                
-                with requests.post(API_URL, json=payload, stream=False) as r:
-                    r.raise_for_status()
-                    response_data = r.json()
-
-                    
-                    bot_response = response_data.get("answer", "No response found.")
-                    full_response += bot_response
-                    message_placeholder.markdown(full_response)
-
-            except requests.exceptions.RequestException as e:
-                
-                error_message = (
-                    f"Error communicating with the API. "
-                    f"Please ensure the backend is running. Details: {e}"
-                )
-                message_placeholder.error(error_message)
-                full_response = error_message
-
-    
-    st.session_state.messages.append({"role": "assistant", "content": full_response} )
+# Export to PDF
+if st.button("📄 Download My Story"):
+    story_text = "\n\n".join([m["content"] for m in st.session_state.chat_history if m["role"] != "system"])
+    export_story_to_pdf(story_text)
+    with open("story.pdf", "rb") as f:
+        st.download_button("📥 Download PDF", f, file_name="my_story.pdf")
